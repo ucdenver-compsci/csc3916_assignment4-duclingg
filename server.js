@@ -179,7 +179,7 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
     if (req.query.reviews === 'true') {
         Movie.aggregate([
             {
-                $match: { _id: mongoose.Types.ObjectId(movieId) }
+                $match: { _id: mongoose.Types.ObjectId(id) }
             },
             {
                 $lookup: {
