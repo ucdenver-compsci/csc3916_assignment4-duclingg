@@ -169,6 +169,8 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
+var mongoose = require('mongoose');
+
 // get movie with reviews
 router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
     var id = mongoose.Types.ObjectId(req.query.movieId);
