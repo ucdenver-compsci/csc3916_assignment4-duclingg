@@ -177,22 +177,14 @@ router.route('/movies/:movieid')
         console.log(req.params);
         console.log(req.query.reviews);
 
-        var id = req.params.movieid;
-
-        var IncludeReview;
-        IncludeReview = req.query.reviews;
-
-        if (IncludeReview === "true") {
-            IncludeReview = true;
-        } else {
-            IncludeReview = false;
-        }
+        var id = req.params.movieId;
+        var includeReview = req.query.reviews === 'true';
 
         Movie.findById(id, function (err, movie) {
             if (err) {
                 res.json({message: "Error. Movie not found with that id."});
             } else {
-                if (IncludeReview) {
+                if (includeReview) {
                     Movie.aggregate([
                     {
                         $match: {'_id': mongoose.Types.ObjectId(req.params.movieid)}
@@ -207,13 +199,13 @@ router.route('/movies/:movieid')
                     },
                 ], function(err, data) {
                     if(err) {
-                        res.send(err);
+                        res.status(400).json({ success: false, message: "Error fetching movie and reviews." });
                     } else{
-                        res.json(data[0]);
+                        res.status(200).json(data[0]);
                     }
                 });
             } else {
-                res.json(movie);
+                res.status(200).json(movie);
             }
         }
     })
@@ -248,7 +240,7 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
 
 // get review
 router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
-    const movieId = req.query.id;
+    const movieId = req.query.movieId;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID: ', movieId);
 
