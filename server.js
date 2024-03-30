@@ -172,34 +172,51 @@ router.route('/movies')
 var mongoose = require('mongoose');
 
 // get movie with reviews
-router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
-    var id = mongoose.Types.ObjectId(req.query.movieId);
+router.route('/movies/:movieid')
+    .get(authJwtController.isAuthenticated, function (req, res) {
+        console.log(req.params);
+        console.log(req.query.reviews);
 
-    if (req.query.reviews == 'true') {
-        Movie.aggregate([
-            {
-                $match: 
-                {
-                    '_id' : mongoose.Types.ObjectId(req.query.movieId)
-                }
-            },
-            {
-                $lookup:
-                {
-                    from: "reviews",
-                    localField: "_id",
-                    foreignField: "movieId",
-                    as: "movie_reviews"
-                }
-            }
-        ]).exec(function (err, movie_reviews) {
+        var id = req.params.movieid;
+
+        var IncludeReview;
+        IncludeReview = req.query.reviews;
+
+        if (IncludeReview === "true") {
+            IncludeReview = true;
+        } else {
+            IncludeReview = false;
+        }
+
+        Movie.findById(id, function (err, movie) {
             if (err) {
-                res.status(400).json({ sucess: false, message: "Failed to aggregate reviews." });
+                res.json({message: "Error. Movie not found with that id."});
             } else {
-                return res.status(200).json(movie_reviews);
+                if (IncludeReview) {
+                    Movie.aggregate([
+                    {
+                        $match: {'_id': mongoose.Types.ObjectId(req.params.movieid)}
+                    },
+                    {
+                        $lookup: {
+                            from: 'reviews',
+                            localField: '_id',
+                            foreignField: 'movieid',
+                            as: 'reviews'
+                        }
+                    },
+                ], function(err, data) {
+                    if(err) {
+                        res.send(err);
+                    } else{
+                        res.json(data[0]);
+                    }
+                });
+            } else {
+                res.json(movie);
             }
-        })
-    }
+        }
+    })
 });
 
 // post review
