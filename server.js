@@ -188,14 +188,14 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
 
 // get review
 router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
-    const movieId = req.params.id;
+    const movieId = req.query.id; // Use req.query.id to get the movieId from query parameters
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID: ', movieId);
 
     if (includeReviews) {
         Movie.aggregate([
             {
-                $match: { _id: mongoose.Types.ObjectID(movieId) }
+                $match: { _id: mongoose.Types.ObjectId(movieId) } // Corrected from mongoose.Types.ObjectID
             },
             {
                 $lookup: {
@@ -205,22 +205,23 @@ router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
                     as: "movie_reviews"
                 }
             }
-        ]).exec(function (err, res) {
-            if (err) {
+        ]).exec(function (err, movie) { // Renamed the variable to avoid conflicts
+            if (err || !movie || movie.length === 0) {
                 return res.status(404).json({ success: false, message: 'Movie not found' });
             } else {
-                res.status(200).json({ success: true, message: "Review queried." });
+                res.status(200).json({ success: true, message: "Review queried.", movie: movie });
             }
         });
     } else {
         Review.find({}, function(err, reviews) {
             if (err) {
-                return res.status(404).json({ success: false, message: "Error retrieving movie review." });
+                return res.status(404).json({ success: false, message: "Error retrieving movie reviews." });
             }
             res.json(reviews);
         });
     }
 });
+
 
 router.all('/', function (req, res) {
     return res.status(403).json({ success: false, msg: 'This route is not supported.' });
