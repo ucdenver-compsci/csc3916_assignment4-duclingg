@@ -169,44 +169,42 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
-// get movie with review
-router.get('/movies/:id', authJwtController.isAuthenticated, (req, res) => {
-    const movieId = req.params.id;
-    const includeReviews = req.query.reviews === 'true';
-    console.log('Movie ID:', movieId);
+// get movie with reviews
+route.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
+    var id = mongoose.Types.ObjectId(req.query.movieId);
 
-    if (includeReviews) {
+    if (req.query.reviews == 'true') {
         Movie.aggregate([
             {
-                $match: { _id: mongoose.Types.ObjectId(movieId) }
+                $match: 
+                {
+                    '_id' : mongoose.Types.ObjectId(req.query.movieId)
+                }
             },
             {
-                $lookup: {
+                $lookup:
+                {
                     from: "reviews",
                     localField: "_id",
                     foreignField: "movieId",
                     as: "movie_reviews"
                 }
             }
-        ]).exec(function (err, result) {
+        ], function (err, movie) {
             if (err) {
-                return res.status(404).json({ error: 'Movie not found' });
+                return res.status(400).json({ sucess: false, message: "Error retrieving movie and reviews." });
             } else {
-                res.status(200).json(result);
+                return res.status(200).json({ success: true, message: movie[0] });
             }
         });
     } else {
-        Movie.findById(movieId)
-            .then(movie => {
-                if (!movie) {
-                    return res.status(404).json({ error: 'Movie not found' });
-                }
-                res.status(200).json(movie);
-            })
-            .catch(error => {
-                console.error('Error fetching movie:', error);
-                res.status(404).json({ error: 'Movie not found' });
-            });
+        Movie.findById(id, function (err, movie) {
+            if (err) {
+                return res.status(400).json({ sucess: false, message: "Error retrieving movie." });
+            } else {
+                return res.status(200).json({ sucess: true, message: movie });
+            }
+        });
     }
 });
 
