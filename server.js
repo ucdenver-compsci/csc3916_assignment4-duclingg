@@ -169,7 +169,7 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
-// get movie with review
+// get movies with review
 router.get('/movies/:id', authJwtController.isAuthenticated, (req, res) => {
     const movieId = req.query.id;
     const includeReviews = req.query.reviews === 'true';
@@ -215,7 +215,7 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
     if (!req.body.movieId || req.body.movieId.trim() === "") {
         return res.status(400).json({ success: false, message: "Movie ID is required." });
     }
-    
+
     Movie.findById(req.body.movieId, function(err, movie) {
         if (err || !movie) {
             return res.status(404).json({ success: false, message: "Movie not found. Unable to create review." });
