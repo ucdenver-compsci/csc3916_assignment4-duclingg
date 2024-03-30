@@ -169,6 +169,47 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
+// get movie with review
+router.get('/movies/:id', authJwtController.isAuthenticated, (req, res) => {
+    const movieId = req.params.id;
+    const includeReviews = req.query.reviews === 'true';
+    console.log('Movie ID:', movieId);
+
+    if (includeReviews) {
+        Movie.aggregate([
+            {
+                $match: { _id: mongoose.Types.ObjectId(movieId) }
+            },
+            {
+                $lookup: {
+                    from: "reviews",
+                    localField: "_id",
+                    foreignField: "movieId",
+                    as: "movie_reviews"
+                }
+            }
+        ]).exec(function (err, result) {
+            if (err) {
+                return res.status(404).json({ error: 'Movie not found' });
+            } else {
+                res.status(200).json(result);
+            }
+        });
+    } else {
+        Movie.findById(movieId)
+            .then(movie => {
+                if (!movie) {
+                    return res.status(404).json({ error: 'Movie not found' });
+                }
+                res.status(200).json(movie);
+            })
+            .catch(error => {
+                console.error('Error fetching movie:', error);
+                res.status(404).json({ error: 'Movie not found' });
+            });
+    }
+});
+
 // post review
 router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
     var review = new Review({
@@ -188,14 +229,14 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
 
 // get review
 router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
-    const movieId = req.query.id; // Use req.query.id to get the movieId from query parameters
+    const movieId = req.query.id;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID: ', movieId);
 
     if (includeReviews) {
         Movie.aggregate([
             {
-                $match: { _id: mongoose.Types.ObjectId(movieId) } // Corrected from mongoose.Types.ObjectID
+                $match: { _id: mongoose.Types.ObjectId(movieId) }
             },
             {
                 $lookup: {
@@ -205,7 +246,7 @@ router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
                     as: "movie_reviews"
                 }
             }
-        ]).exec(function (err, movie) { // Renamed the variable to avoid conflicts
+        ]).exec(function (err, movie) {
             if (err || !movie || movie.length === 0) {
                 return res.status(404).json({ success: false, message: 'Movie not found' });
             } else {
