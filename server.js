@@ -192,21 +192,13 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
                     as: "movie_reviews"
                 }
             }
-        ], function (err, movie) {
+        ]).exec(function (err, movie_reviews) {
             if (err) {
-                return res.status(400).json({ sucess: false, message: "Error retrieving movie and reviews." });
+                res.status(400).json({ sucess: false, message: "Failed to aggregate reviews." });
             } else {
-                return res.status(200).json({ success: true, message: movie[0] });
+                return res.status(200).json(movie_reviews);
             }
-        });
-    } else {
-        Movie.findById(id, function (err, movie) {
-            if (err) {
-                return res.status(400).json({ sucess: false, message: "Error retrieving movie." });
-            } else {
-                return res.status(200).json({ sucess: true, message: movie });
-            }
-        });
+        })
     }
 });
 
