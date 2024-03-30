@@ -170,8 +170,8 @@ router.route('/movies')
 });
 
 // get movie with reviews
-router.get('/movies/:movieid', authJwtController.isAuthenticated, function (req, res) {
-    const movieId = req.query.movieId;
+router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
+    const movieId = req.params.movieId;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID: ', movieId);
 
@@ -189,7 +189,7 @@ router.get('/movies/:movieid', authJwtController.isAuthenticated, function (req,
                 }
             }
         ]).exec(function (err, movie) {
-            if (err || !movie || movie.length === 0) {
+            if (err) {
                 return res.status(404).json({ success: false, message: 'Movie not found' });
             } else {
                 res.status(200).json({ success: true, message: "Review queried.", movie: movie });
@@ -236,9 +236,9 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
 router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
     console.log(req.body);
 
-    Review.find(function (err, review) {
+    Review.find(req.query, function (err, review) {
         if (err) {
-            res.status(400).json({ sucess: false, message: "Could not fetch reviews." });
+            res.status(400).json({ sucess: false, message: "Failed to get reviews." });
         } else {
             res.status(200).json(review)
         }
