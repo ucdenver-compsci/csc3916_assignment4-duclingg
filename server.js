@@ -169,13 +169,14 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
+var mongoose = require('mongoose');
+
 // get movie with reviews
 router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
-    const movieId = req.params.movieId;
-    const includeReviews = req.query.reviews === 'true';
-    console.log('Movie ID: ', movieId);
+    var id = mongoose.Types.ObjectId(req.query.movieId);
+    console.log('Movie ID: ', id);
 
-    if (includeReviews) {
+    if (req.query.reviews === 'true') {
         Movie.aggregate([
             {
                 $match: { _id: mongoose.Types.ObjectId(movieId) }
