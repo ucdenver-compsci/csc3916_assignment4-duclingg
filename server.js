@@ -173,13 +173,13 @@ var mongoose = require('mongoose');
 
 // get movie with reviews
 router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
-    var id = mongoose.Types.ObjectId(req.query.movieId);
+    var id = mongoose.Types.ObjectId(req.params.movieId);
     console.log('Movie ID: ', id);
 
     if (req.query.reviews === 'true') {
         Movie.aggregate([
             {
-                $match: { _id: mongoose.Types.ObjectId(id) }
+                $match: { _id: id }
             },
             {
                 $lookup: {
@@ -197,12 +197,17 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
             }
         });
     } else {
-        Review.find({}, function(err, reviews) {
-            if (err) {
-                return res.status(404).json({ success: false, message: "Error retrieving movie reviews." });
-            }
-            res.json(reviews);
-        });
+        Movie.findById(id)
+            .then(movie => {
+                if (!movie) {
+                    return res.status(404).json({ success: false, message: 'Movie not found' });
+                }
+                res.status(200).json(movie);
+            })
+            .catch(error => {
+                console.error('Error fetching movie:', error);
+                res.status(500).json({ success: false, message: 'Error fetching movie' });
+            });
     }
 });
 
