@@ -171,7 +171,7 @@ router.route('/movies')
 
 // get movie with review
 router.get('/movies/:id', authJwtController.isAuthenticated, (req, res) => {
-    const movieId = req.params.id;
+    const movieId = req.query.id;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID:', movieId);
 
@@ -212,18 +212,24 @@ router.get('/movies/:id', authJwtController.isAuthenticated, (req, res) => {
 
 // post review
 router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
-    var review = new Review({
-        movieId: req.body.movieId,
-        username: req.body.username,
-        review: req.body.review,
-        rating: req.body.rating
-    });
-
-    review.save(function (err) {
-        if (err) {
-            return res.status(404).json({ success: false, message: "Failed to create movie review." });
+    Movie.findById(req.body.movieId, function(err, movie) {
+        if (err || !movie) {
+            return res.status(404).json({ success: false, message: "Movie not found. Unable to create review." });
         }
-        res.json({ success: true, message: "Review created!" });
+
+        var review = new Review({
+            movieId: req.body.movieId,
+            username: req.body.username,
+            review: req.body.review,
+            rating: req.body.rating
+        });
+
+        review.save(function (err) {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Failed to create movie review.", error: err });
+            }
+            res.json({ success: true, message: "Review created!" });
+        });
     });
 });
 
