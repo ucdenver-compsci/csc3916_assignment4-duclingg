@@ -187,7 +187,7 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
 });
 
 // get review
-router.get('reviews', authJwtController.isAuthenticated, (req, res) => {
+router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
     const movieId = req.params.id;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID: ', movieId);
@@ -207,9 +207,9 @@ router.get('reviews', authJwtController.isAuthenticated, (req, res) => {
             }
         ]).exec(function (err, res) {
             if (err) {
-                return res.status(404).json({ error: 'Movie not found' });
+                return res.status(404).json({ success: false, message: 'Movie not found' });
             } else {
-                res.status(200).json(res);
+                res.status(200).json({ success: true, message: "Review queried." });
             }
         });
     } else {
