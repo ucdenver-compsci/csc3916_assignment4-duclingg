@@ -169,9 +169,9 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
-// get movies with review
+// get movie with review
 router.get('/movies/:id', authJwtController.isAuthenticated, (req, res) => {
-    const movieId = req.query.id;
+    const movieId = req.params.id;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID:', movieId);
 
