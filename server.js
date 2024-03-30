@@ -170,7 +170,7 @@ router.route('/movies')
 });
 
 // get movie with reviews
-route.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
+router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
     var id = mongoose.Types.ObjectId(req.query.movieId);
 
     if (req.query.reviews == 'true') {
