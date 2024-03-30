@@ -187,7 +187,7 @@ router.route('/movies/:movieid')
                 if (includeReview) {
                     Movie.aggregate([
                     {
-                        $match: {'_id': mongoose.Types.ObjectId(req.params.movieid)}
+                        $match: {'_id': mongoose.Types.ObjectId(movieId)}
                     },
                     {
                         $lookup: {
