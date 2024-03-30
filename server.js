@@ -169,77 +169,8 @@ router.route('/movies')
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
 });
 
-var mongoose = require('mongoose');
-
 // get movie with reviews
-router.route('/movies/:movieid')
-    .get(authJwtController.isAuthenticated, function (req, res) {
-        console.log(req.params);
-        console.log(req.query.reviews);
-
-        var id = req.params.movieId;
-        var includeReview = req.query.reviews === 'true';
-
-        Movie.findById(id, function (err, movie) {
-            if (err) {
-                res.json({message: "Error. Movie not found with that id."});
-            } else {
-                if (includeReview) {
-                    Movie.aggregate([
-                    {
-                        $match: {'_id': mongoose.Types.ObjectId(movieId)}
-                    },
-                    {
-                        $lookup: {
-                            from: 'reviews',
-                            localField: '_id',
-                            foreignField: 'movieId',
-                            as: 'movie_reviews'
-                        }
-                    },
-                ], function(err, data) {
-                    if(err) {
-                        res.status(400).json({ success: false, message: "Error fetching movie and reviews." });
-                    } else{
-                        res.status(200).json(data[0]);
-                    }
-                });
-            } else {
-                res.status(200).json(movie);
-            }
-        }
-    })
-});
-
-// post review
-router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
-    if (!req.body.movieId || req.body.movieId.trim() === "") {
-        return res.status(400).json({ success: false, message: "Movie ID is required." });
-    }
-
-    Movie.findById(req.body.movieId, function(err, movie) {
-        if (err || !movie) {
-            return res.status(404).json({ success: false, message: "Movie not found. Unable to create review." });
-        }
-
-        var review = new Review({
-            movieId: req.body.movieId,
-            username: req.body.username,
-            review: req.body.review,
-            rating: req.body.rating
-        });
-
-        review.save(function (err) {
-            if (err) {
-                return res.status(500).json({ success: false, message: "Failed to create movie review.", error: err });
-            }
-            res.json({ success: true, message: "Review created!" });
-        });
-    });
-});
-
-// get review
-router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
+router.get('/movies/:movieid', authJwtController.isAuthenticated, function (req, res) {
     const movieId = req.query.movieId;
     const includeReviews = req.query.reviews === 'true';
     console.log('Movie ID: ', movieId);
@@ -274,6 +205,45 @@ router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
     }
 });
 
+// post review
+router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
+    if (!req.body.movieId || req.body.movieId.trim() === "") {
+        return res.status(400).json({ success: false, message: "Movie ID is required." });
+    }
+
+    Movie.findById(req.body.movieId, function(err, movie) {
+        if (err || !movie) {
+            return res.status(404).json({ success: false, message: "Movie not found. Unable to create review." });
+        }
+
+        var review = new Review({
+            movieId: req.body.movieId,
+            username: req.body.username,
+            review: req.body.review,
+            rating: req.body.rating
+        });
+
+        review.save(function (err) {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Failed to create movie review.", error: err });
+            }
+            res.json({ success: true, message: "Review created!" });
+        });
+    });
+});
+
+// get reviews
+router.get('/reviews', authJwtController.isAuthenticated, (req, res) => {
+    console.log(req.body);
+
+    Review.find(function (err, review) {
+        if (err) {
+            res.status(400).json({ sucess: false, message: "Could not fetch reviews." });
+        } else {
+            res.status(200).json(review)
+        }
+    })
+});
 
 router.all('/', function (req, res) {
     return res.status(403).json({ success: false, msg: 'This route is not supported.' });
