@@ -177,7 +177,7 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
     console.log('Movie ID: ', id);
 
     if (req.query.reviews === 'true') {
-        Movie.aggregate([
+        Movies.aggregate([
             {
                 $match: { _id: id }
             },
@@ -189,25 +189,21 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
                     as: "movie_reviews"
                 }
             }
-        ]).exec(function (err, movie) {
+        ]).exec(function (err, moviesWithReviews) {
             if (err) {
                 return res.status(404).json({ success: false, message: 'Movie not found' });
             } else {
-                res.status(200).json({ success: true, message: "Review queried.", movie: movie });
+                res.status(200).json({ success: true, message: "Movie with reviews queried.", movies: moviesWithReviews });
             }
         });
     } else {
         Movie.findById(id)
-            .then(movie => {
-                if (!movie) {
-                    return res.status(404).json({ success: false, message: 'Movie not found' });
-                }
-                res.status(200).json(movie);
+            .then(movies => {
+                res.status(200).json({ sucess: true, movies });
             })
-            .catch(error => {
-                console.error('Error fetching movie:', error);
-                res.status(500).json({ success: false, message: 'Error fetching movie' });
-            });
+            .catch(err => {
+                res.status(500).json({ sucess: false, message: 'Failed to fetch movies.', error: err });
+            })
     }
 });
 
