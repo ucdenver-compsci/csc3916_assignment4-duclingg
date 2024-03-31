@@ -193,6 +193,10 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
             if (err) {
                 return res.status(404).json({ success: false, message: 'Movie not found' });
             } else {
+                if (result.length === 0) {
+                    return res.json({ sucess: false, message: "This movie does not have any reviews." });
+                }
+                
                 console.log(result);
                 res.status(200).json({ success: true, message: "Movie with reviews queried.", result });
             }
