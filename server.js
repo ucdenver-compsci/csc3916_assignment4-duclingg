@@ -90,66 +90,18 @@ router.post('/signin', function (req, res) {
 // API route to movies
 router.route('/movies')
     .get(authJwtController.isAuthenticated, function (req, res) {
-        if(req.query.movieId != null){
-            Movie.find({_id: mongoose.Types.ObjectId(req.query.movieId)}, function(err, data){
-                if(err) {
-                    res.status(400).json({ sucess: false, message: "Invalid query"});
-                } else if(data.length == 0) {
-                    res.status(400).json({ sucess: false, message: "No entry found"});
-                } else {
-                    if(req.query.reviews == "true"){
-                        Movie.aggregate([
-                            {
-                                $match: {'_id': mongoose.Types.ObjectId(req.query.movieId)}
-                            },
-                            {
-                                $lookup:{
-                                    from: 'reviews',
-                                    localField: '_id',
-                                    foreignField: 'movieId',
-                                    as: 'reviews'
-                                }
-                            }],function(err, doc) {
-                            if(err) {
-                                res.send(err);
-                            } else {
-                                console.log(doc);
-                                res.status(200).json({ sucess: true, doc });
-                            }
-                        });
-                    } else {
-                        res.json(data);
-                    }
-                }
-            });
-        } else {
-            Movie.find({}, function(err, doc) {
-                if(err) {
-                    res.json({error: err});
-                } else {
-                    if(req.query.reviews == "true") {
-                        Movie.aggregate([
-                            {
-                                $lookup:
-                                {
-                                    from: 'reviews',
-                                    localField: '_id',
-                                    foreignField: 'Movie_ID',
-                                    as: 'reviews'
-                                }
-                            }],function(err, data) {
-                            if(err) {
-                                res.send(err);
-                            } else {
-                                res.json(data);
-                            }
-                        });
-                    } else {
-                        res.json(doc);
-                    }
-                }
-            })
-        }
+        Movie.find({
+            title: { $exists: true, $ne: null },
+            releaseDate: { $exists: true, $ne: null },
+            genre: { $exists: true, $ne: null },
+            actors: { $exists: true, $ne: null }
+        }, (err, movies) => {
+            if (err) {
+                res.status(400).send(err);
+            } else {
+                res.status(200).json(movies);
+            }
+        });
     })
     .post(authJwtController.isAuthenticated, function (req, res) {
         console.log(req.body);
@@ -215,6 +167,45 @@ router.route('/movies')
     })
     .all(function(req, res) {
         return res.status(403).json({success: false, message: "This HTTP method is not supported. Only GET, POST, PUT, and DELETE are supported."});
+});
+
+var mongoose = require('mongoose');
+
+// get movie with reviews
+router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
+    var id = mongoose.Types.ObjectId(req.params.movieId);
+    console.log('Movie ID: ', id);
+
+    if (req.query.reviews === 'true') {
+        Movie.aggregate([
+            {
+                $match: { _id: id }
+            },
+            {
+                $lookup: {
+                    from: "reviews",
+                    localField: "_id",
+                    foreignField: "movieId",
+                    as: "movie_reviews"
+                }
+            }
+        ]).exec(function (err, result) {
+            if (err) {
+                return res.status(404).json({ success: false, message: 'Movie not found' });
+            } else {
+                console.log(result);
+                res.status(200).json({ success: true, message: "Movie with reviews queried.", result });
+            }
+        });
+    } else {
+        Movie.findById(id)
+            .then(movies => {
+                res.status(200).json({ sucess: true, movies });
+            })
+            .catch(err => {
+                res.status(500).json({ sucess: false, message: 'Failed to fetch movies.', error: err });
+            })
+    }
 });
 
 // post review
