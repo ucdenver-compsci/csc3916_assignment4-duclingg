@@ -91,15 +91,13 @@ router.post('/signin', function (req, res) {
 router.route('/movies')
     .get(authJwtController.isAuthenticated, function (req, res) {
         if(req.query.movieId != null){
-            Movie.find({_id: mongoose.Types.ObjectId(req.query.movieId)}, 'title', function(err, data) {
-                if (err || data.length == 0) {
-                    res.json({status: 400, message: "No movies found."})
-                }
-                else {
-                    const movieTitles = data.map(movie => movie.title);
-                    res.json({status: 200, message: "Movies found!", titles: movieTitles});
-
-                    if(req.query.reviews == "true" || req.query.reviews == "True"){
+            Movie.find({_id: mongoose.Types.ObjectId(req.query.movieId)}, function(err, data){
+                if(err) {
+                    res.status(400).json({ sucess: false, message: "Invalid query"});
+                } else if(data.length == 0) {
+                    res.status(400).json({ sucess: false, message: "No entry found"});
+                } else {
+                    if(req.query.reviews == "true"){
                         Movie.aggregate([
                             {
                                 $match: {'_id': mongoose.Types.ObjectId(req.query.movieId)}
@@ -109,49 +107,44 @@ router.route('/movies')
                                     from: 'reviews',
                                     localField: '_id',
                                     foreignField: 'movieId',
-                                    as: 'Reviews'
+                                    as: 'reviews'
                                 }
                             }],function(err, doc) {
-                            if(err){
-                                console.log("Error encountered.");
+                            if(err) {
                                 res.send(err);
-                            }
-                            else{
+                            } else {
                                 console.log(doc);
-                                res.json(doc);
+                                res.status(200).json({ sucess: true, doc });
                             }
                         });
-                    }
-                    else{
+                    } else {
                         res.json(data);
                     }
                 }
             });
-        }
-        else{
-            Movie.find({}, function(err, doc){
-                if(err){
+        } else {
+            Movie.find({}, function(err, doc) {
+                if(err) {
                     res.json({error: err});
-                }
-                else{
-                    if(req.query.reviews == "true" || req.query.reviews == "True"){
-                        Movie.aggregate([{
-                            $lookup:{
-                                from: 'reviews',
-                                localField: '_id',
-                                foreignField: 'movieId',
-                                as: 'Reviews'
-                            }
-                        }], function(err, data) {
-                            if(err){
+                } else {
+                    if(req.query.reviews == "true") {
+                        Movie.aggregate([
+                            {
+                                $lookup:
+                                {
+                                    from: 'reviews',
+                                    localField: '_id',
+                                    foreignField: 'Movie_ID',
+                                    as: 'reviews'
+                                }
+                            }],function(err, data) {
+                            if(err) {
                                 res.send(err);
-                            }
-                            else{
+                            } else {
                                 res.json(data);
                             }
                         });
-                    }
-                    else{
+                    } else {
                         res.json(doc);
                     }
                 }
