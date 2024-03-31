@@ -170,6 +170,7 @@ router.route('/movies')
 });
 
 var mongoose = require('mongoose');
+const Movies = require('./Movies');
 
 // get movie with reviews
 router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req, res) {
@@ -197,7 +198,7 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
             }
         });
     } else {
-        Movie.findById(id)
+        Movies.findById(id)
             .then(movies => {
                 res.status(200).json({ sucess: true, movies });
             })
