@@ -179,7 +179,7 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
     if (req.query.reviews === 'true') {
         Movie.aggregate([
             {
-                $match: { _id: id }
+                $match: { _id: mongoose.Types.ObjectId(req.params.movieId) }
             },
             {
                 $lookup: {
@@ -219,18 +219,18 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
             return res.status(404).json({ success: false, message: "Movie not found. Unable to create review." });
         }
 
-        var review = new Review({
-            movieId: req.body.movieId,
-            username: req.body.username,
-            review: req.body.review,
-            rating: req.body.rating
-        });
+        var review = new Review();
+        review.movieId = req.body.movieId;
+        review.username = req.body.username;
+        review.review = req.body.review;
+        review.rating = req.body.rating;
 
         review.save(function (err) {
             if (err) {
                 return res.status(500).json({ success: false, message: "Failed to create movie review.", error: err });
+            } else {
+                res.json({ success: true, message: "Review created!" });
             }
-            res.json({ success: true, message: "Review created!" });
         });
     });
 });
