@@ -214,9 +214,13 @@ router.post('/reviews', authJwtController.isAuthenticated, function(req, res) {
         return res.status(400).json({ success: false, message: "Movie ID is required." });
     }
 
-    Movie.findById({movieId: req.body.movieId, username: req.body.username}, function(err, movie) {
-        if (err || !movie) {
+    Movie.findById(req.body.movieId, function(err, movie) {
+        if (!movie) {
             return res.status(404).json({ success: false, message: "Movie not found. Unable to create review." });
+        }
+
+        if (err) {
+            return res.status(400).json({ success: false, message: "Unable to create review. Already Exists." });
         }
 
         var review = new Review();
