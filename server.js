@@ -200,7 +200,7 @@ router.get('/movies/:movieId', authJwtController.isAuthenticated, function (req,
     } else {
         Movie.findById(id)
             .then(movies => {
-                res.status(200).json({ sucess: true, movies });
+                res.status(200).json({ message: "This movie does not have any reviews." });
             })
             .catch(err => {
                 res.status(500).json({ sucess: false, message: 'Failed to fetch movies.', error: err });
